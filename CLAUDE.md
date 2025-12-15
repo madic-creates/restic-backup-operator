@@ -82,7 +82,7 @@ Utilities for Kubernetes condition management with proper LastTransitionTime han
 Uses Ginkgo v2 + Gomega with envtest for embedded Kubernetes API server. Test setup in `internal/controller/suite_test.go` bootstraps all controllers.
 
 ## Tool Versions
-- Go: 1.23
+- Go: 1.25
 - Kubernetes (envtest): 1.31.0
 - controller-tools: v0.18.0
 - golangci-lint: v2.1.6

@@ -135,7 +135,7 @@ The operator supports two notification backends:
 
 ### Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - Docker
 - kubectl
 - kubebuilder
