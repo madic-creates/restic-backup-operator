@@ -187,17 +187,4 @@ rules:
     verbs:
       - create
       - patch
-  # CiliumNetworkPolicies
-  - apiGroups:
-      - cilium.io
-    resources:
-      - ciliumnetworkpolicies
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
 {{- end }}

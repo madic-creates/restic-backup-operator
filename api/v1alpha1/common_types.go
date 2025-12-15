@@ -279,14 +279,3 @@ type JobConfiguration struct {
 	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
-
-// NetworkPolicyConfig configures network policy generation.
-type NetworkPolicyConfig struct {
-	// Enabled enables automatic network policy generation.
-	// +optional
-	Enabled bool `json:"enabled,omitempty"`
-
-	// AdditionalEgress specifies additional egress rules.
-	// +optional
-	AdditionalEgress []string `json:"additionalEgress,omitempty"`
-}

@@ -201,10 +201,6 @@ type ResticBackupSpec struct {
 	// +optional
 	JobConfig *JobConfiguration `json:"jobConfig,omitempty"`
 
-	// NetworkPolicy controls network policy generation.
-	// +optional
-	NetworkPolicy *NetworkPolicyConfig `json:"networkPolicy,omitempty"`
-
 	// Suspend suspends backup scheduling.
 	// +kubebuilder:default=false
 	// +optional

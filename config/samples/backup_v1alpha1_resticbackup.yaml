@@ -80,9 +80,5 @@ spec:
         memory: "512Mi"
         cpu: "1000m"
 
-  # Network policy (optional)
-  networkPolicy:
-    enabled: true
-
   # Suspend scheduling (useful for maintenance)
   suspend: false

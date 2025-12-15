@@ -27572,18 +27572,6 @@ spec:
                       type: object
                     type: array
                 type: object
-              networkPolicy:
-                description: NetworkPolicy controls network policy generation.
-                properties:
-                  additionalEgress:
-                    description: AdditionalEgress specifies additional egress rules.
-                    items:
-                      type: string
-                    type: array
-                  enabled:
-                    description: Enabled enables automatic network policy generation.
-                    type: boolean
-                type: object
               notifications:
                 description: Notifications configures backup notifications.
                 properties:
