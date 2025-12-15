@@ -15,6 +15,15 @@ linters:
     - unconvert
     - unparam
     - prealloc
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - unparam
+      - path: zz_generated
+        linters:
+          - all
 
 formatters:
   enable:
@@ -26,13 +35,3 @@ formatters:
         - standard
         - default
         - prefix(github.com/madic-creates/restic-backup-operator)
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - unparam
-    - path: zz_generated
-      linters:
-        - all
