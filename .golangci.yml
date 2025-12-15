@@ -13,18 +13,20 @@ linters:
     - staticcheck
     - unused
     - gofmt
-    - goimports
+    - gci
     - misspell
     - unconvert
     - unparam
     - prealloc
   settings:
-    goimports:
-      local-prefixes:
-        - github.com/madic-creates/restic-backup-operator
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/madic-creates/restic-backup-operator)
 
-issues:
-  exclude-rules:
+exclusions:
+  rules:
     - path: _test\.go
       linters:
         - errcheck
