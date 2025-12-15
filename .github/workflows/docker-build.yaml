@@ -30,6 +30,10 @@ on:
         description: 'Full image reference'
         value: ${{ jobs.build.outputs.image }}
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     name: Build and Push
