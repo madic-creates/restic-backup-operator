@@ -34,11 +34,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: https://github.com/actions/checkout@v4
+        uses: https://github.com/actions/checkout@v6
 
       - name: Run Renovate (GitHub)
         if: github.server_url == 'https://github.com'
-        uses: https://github.com/renovatebot/github-action@v41.0.12
+        uses: https://github.com/renovatebot/github-action@v44.0.5
         with:
           configurationFile: .github/workflows/renovate.json
           token: ${{ secrets.RENOVATE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -48,7 +48,7 @@ jobs:
 
       - name: Setup Node.js (Forgejo)
         if: github.server_url != 'https://github.com'
-        uses: https://github.com/actions/setup-node@v4
+        uses: https://github.com/actions/setup-node@v6
         with:
           node-version: '20'
 
