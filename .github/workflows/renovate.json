@@ -7,10 +7,13 @@
     ":automergeMinor",
     "group:allNonMajor"
   ],
+  "assignees": [
+    "madic"
+  ],
   "labels": ["dependencies"],
   "prHourlyLimit": 5,
   "prConcurrentLimit": 10,
-  "minimumReleaseAge": "3 days",
+  "minimumReleaseAge": "5 days",
   "vulnerabilityAlerts": {
     "enabled": true,
     "labels": ["security"]
@@ -56,6 +59,17 @@
       "automerge": false
     }
   ],
+  "automerge": true,
+  "automergeType": "branch",
+  "major": {
+    "automerge": false
+  },
+  "minor": {
+    "automerge": true
+  },
+  "patch": {
+    "automerge": true
+  },
   "postUpdateOptions": ["gomodTidy"],
   "gomod": {
     "enabled": true
