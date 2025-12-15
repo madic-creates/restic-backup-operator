@@ -84,7 +84,7 @@ Uses Ginkgo v2 + Gomega with envtest for embedded Kubernetes API server. Test se
 ## Tool Versions
 - Go: 1.23
 - Kubernetes (envtest): 1.31.0
-- controller-tools: v0.16.5
+- controller-tools: v0.18.0
 - golangci-lint: v2.1.6
 
 ## CI/CD Guidelines
