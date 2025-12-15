@@ -358,7 +358,12 @@ func (r *GlobalRetentionPolicyReconciler) buildCronJob(policy *backupv1alpha1.Gl
 }
 
 func (r *GlobalRetentionPolicyReconciler) buildRetentionScript(policy *backupv1alpha1.GlobalRetentionPolicy) string {
-	var commands []string
+	// Pre-allocate: 2 header + 2 per policy + 2 optional prune + 1 footer
+	capacity := 3 + 2*len(policy.Spec.Policies)
+	if policy.Spec.Prune {
+		capacity += 2
+	}
+	commands := make([]string, 0, capacity)
 
 	commands = append(commands, "set -e")
 	commands = append(commands, "echo 'Starting retention policy execution'")
