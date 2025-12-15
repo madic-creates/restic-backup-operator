@@ -104,4 +104,4 @@ networkPolicy:
   egress: []
 
 # Default restic image for backup jobs
-defaultResticImage: ghcr.io/restic/restic:0.18.0
+defaultResticImage: ghcr.io/restic/restic:0.18.1
