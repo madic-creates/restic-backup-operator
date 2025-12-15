@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -31,6 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
 )
 
 var (

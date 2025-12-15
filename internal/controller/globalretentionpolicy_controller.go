@@ -22,8 +22,6 @@ import (
 	"strings"
 	"time"
 
-	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
-	"github.com/madic-creates/restic-backup-operator/internal/conditions"
 	"github.com/robfig/cron/v3"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +34,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
+	"github.com/madic-creates/restic-backup-operator/internal/conditions"
 )
 
 const (

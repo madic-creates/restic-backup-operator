@@ -140,7 +140,7 @@ func (n *NtfyNotifier) Notify(ctx context.Context, config NtfyConfig, event Even
 	if err != nil {
 		return fmt.Errorf("failed to send ntfy notification: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("ntfy returned status code %d", resp.StatusCode)

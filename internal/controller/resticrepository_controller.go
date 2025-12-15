@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
-	"github.com/madic-creates/restic-backup-operator/internal/conditions"
-	"github.com/madic-creates/restic-backup-operator/internal/restic"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +31,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
+	"github.com/madic-creates/restic-backup-operator/internal/conditions"
+	"github.com/madic-creates/restic-backup-operator/internal/restic"
 )
 
 const (
