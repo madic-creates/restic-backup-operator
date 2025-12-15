@@ -1,0 +1,84 @@
+name: Cleanup Old Docker Images
+
+on:
+  schedule:
+    # Run weekly on Sunday at 3:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+env:
+  RETENTION_DAYS: 30
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    name: Delete Old Commit-Hash Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine registry type
+        id: registry
+        run: |
+          if [ "${{ github.server_url }}" = "https://github.com" ]; then
+            echo "type=github" >> $GITHUB_OUTPUT
+          else
+            echo "type=forgejo" >> $GITHUB_OUTPUT
+            REGISTRY=$(echo "${{ github.server_url }}" | sed 's|https://||' | sed 's|http://||')
+            echo "url=${REGISTRY}" >> $GITHUB_OUTPUT
+          fi
+
+      # GitHub Container Registry cleanup
+      - name: Cleanup ghcr.io images
+        if: steps.registry.outputs.type == 'github'
+        uses: https://github.com/snok/container-retention-policy@v3
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: ${{ github.event.repository.name }}
+          cut-off: ${{ env.RETENTION_DAYS }}d
+          keep-n-most-recent: 3
+          filter-tags: '[0-9a-f]{40}'
+          tag-selection: filtered
+
+      # Forgejo/Gitea Registry cleanup
+      - name: Cleanup Forgejo registry images
+        if: steps.registry.outputs.type == 'forgejo'
+        env:
+          FORGEJO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_URL: ${{ github.server_url }}
+          OWNER: ${{ github.repository_owner }}
+          PACKAGE: ${{ github.event.repository.name }}
+        run: |
+          CUTOFF_DATE=$(date -d "-${{ env.RETENTION_DAYS }} days" +%s)
+
+          # Get all package versions
+          VERSIONS=$(curl -s -H "Authorization: token ${FORGEJO_TOKEN}" \
+            "${REGISTRY_URL}/api/v1/packages/${OWNER}/container/${PACKAGE}" | \
+            jq -r '.[] | @base64')
+
+          for VERSION in $VERSIONS; do
+            _jq() {
+              echo "${VERSION}" | base64 -d | jq -r "${1}"
+            }
+
+            TAG=$(_jq '.version')
+            CREATED=$(_jq '.created_at')
+
+            # Skip if not a commit hash (40 hex characters)
+            if ! echo "$TAG" | grep -qE '^[0-9a-f]{40}$'; then
+              echo "Skipping non-hash tag: $TAG"
+              continue
+            fi
+
+            # Convert created date to timestamp
+            CREATED_TS=$(date -d "$CREATED" +%s 2>/dev/null || echo "0")
+
+            if [ "$CREATED_TS" -lt "$CUTOFF_DATE" ]; then
+              echo "Deleting old image: $TAG (created: $CREATED)"
+              curl -s -X DELETE -H "Authorization: token ${FORGEJO_TOKEN}" \
+                "${REGISTRY_URL}/api/v1/packages/${OWNER}/container/${PACKAGE}/${TAG}"
+            else
+              echo "Keeping recent image: $TAG (created: $CREATED)"
+            fi
+          done
