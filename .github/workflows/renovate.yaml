@@ -20,7 +20,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/renovate.json'
+      - '.github/renovate.json5'
       - '.github/workflows/renovate.yaml'
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
         if: github.server_url == 'https://github.com'
         uses: https://github.com/renovatebot/github-action@v41.0.12
         with:
-          configurationFile: .github/workflows/renovate.json
+          configurationFile: .github/renovate.json5
           token: ${{ secrets.RENOVATE_TOKEN || secrets.GITHUB_TOKEN }}
         env:
           LOG_LEVEL: ${{ github.event.inputs.dry_run == 'true' && 'debug' || 'info' }}
@@ -64,4 +64,4 @@ jobs:
           RENOVATE_DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: |
           npm install -g renovate
-          renovate --config-file .github/workflows/renovate.json
+          renovate --config-file .github/renovate.json5
