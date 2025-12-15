@@ -130,10 +130,7 @@ jobs:
   docker-build:
     name: Docker Build and Push
     needs: [changes, build]
-    if: |
-      always() &&
-      (needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch') &&
-      needs.build.result == 'success'
+    if: (needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch')
     permissions:
       contents: read
       packages: write
