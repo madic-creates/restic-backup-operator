@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: backup-system
+
+namePrefix: restic-backup-operator-
+
+resources:
+  - ../crd
+  - ../rbac
+  - ../manager
+
+images:
+  - name: controller
+    newName: ghcr.io/madic-creates/restic-backup-operator
+    newTag: latest

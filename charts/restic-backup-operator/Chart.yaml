@@ -1,0 +1,50 @@
+apiVersion: v2
+name: restic-backup-operator
+description: A Kubernetes operator for managing restic-based backups of Persistent Volumes and database dumps
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.26.0-0"
+
+keywords:
+  - backup
+  - restic
+  - kubernetes
+  - operator
+  - pvc
+  - persistent-volume
+
+home: https://github.com/madic-creates/restic-backup-operator
+sources:
+  - https://github.com/madic-creates/restic-backup-operator
+
+maintainers:
+  - name: madic-creates
+    url: https://github.com/madic-creates
+
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+  artifacthub.io/operatorCapabilities: Full Lifecycle
+  artifacthub.io/prerelease: "true"
+  artifacthub.io/crds: |
+    - kind: ResticRepository
+      version: v1alpha1
+      name: resticrepositories.backup.resticbackup.io
+      displayName: Restic Repository
+      description: Defines a restic repository configuration
+    - kind: ResticBackup
+      version: v1alpha1
+      name: resticbackups.backup.resticbackup.io
+      displayName: Restic Backup
+      description: Defines a backup job with scheduling
+    - kind: ResticRestore
+      version: v1alpha1
+      name: resticrestores.backup.resticbackup.io
+      displayName: Restic Restore
+      description: Defines a restore operation
+    - kind: GlobalRetentionPolicy
+      version: v1alpha1
+      name: globalretentionpolicies.backup.resticbackup.io
+      displayName: Global Retention Policy
+      description: Defines cluster-wide retention policies

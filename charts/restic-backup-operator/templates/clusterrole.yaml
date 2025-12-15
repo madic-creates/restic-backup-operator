@@ -1,0 +1,203 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "restic-backup-operator.fullname" . }}-manager-role
+  labels:
+    {{- include "restic-backup-operator.labels" . | nindent 4 }}
+rules:
+  # ResticRepository
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticrepositories
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticrepositories/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticrepositories/status
+    verbs:
+      - get
+      - patch
+      - update
+  # ResticBackup
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticbackups
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticbackups/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticbackups/status
+    verbs:
+      - get
+      - patch
+      - update
+  # ResticRestore
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticrestores
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticrestores/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - resticrestores/status
+    verbs:
+      - get
+      - patch
+      - update
+  # GlobalRetentionPolicy
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - globalretentionpolicies
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - globalretentionpolicies/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - backup.resticbackup.io
+    resources:
+      - globalretentionpolicies/status
+    verbs:
+      - get
+      - patch
+      - update
+  # CronJobs and Jobs
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - watch
+  # Secrets
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  # ServiceAccounts
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  # PVCs
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+  # Pods
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/exec
+    verbs:
+      - get
+      - list
+      - create
+  # Events
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  # CiliumNetworkPolicies
+  - apiGroups:
+      - cilium.io
+    resources:
+      - ciliumnetworkpolicies
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+{{- end }}

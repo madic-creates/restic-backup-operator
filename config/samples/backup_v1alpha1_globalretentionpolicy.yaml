@@ -1,0 +1,73 @@
+apiVersion: backup.resticbackup.io/v1alpha1
+kind: GlobalRetentionPolicy
+metadata:
+  name: weekly-cleanup
+  namespace: backup-system
+spec:
+  # Reference to repository
+  repositoryRef:
+    name: example-repository
+    namespace: backup-system
+
+  # Schedule for retention run
+  schedule: "20 1 * * 0"  # Weekly on Sunday at 1:20 AM
+
+  # Retention policies per tag/hostname
+  policies:
+    - selector:
+        tags:
+          - my-app
+      retention:
+        keepHourly: 48
+        keepDaily: 7
+        keepWeekly: 2
+        keepMonthly: 0
+        keepYearly: 0
+        keepLast: 4
+
+    - selector:
+        tags:
+          - database
+      retention:
+        keepHourly: 24
+        keepDaily: 7
+        keepWeekly: 4
+        keepMonthly: 6
+        keepYearly: 1
+        keepLast: 4
+
+    - selector:
+        hostname: critical-service
+      retention:
+        keepHourly: 48
+        keepDaily: 14
+        keepWeekly: 4
+        keepMonthly: 12
+        keepYearly: 2
+        keepLast: 10
+
+  # Run prune after all forget operations
+  prune: true
+
+  # Notifications (optional)
+  notifications:
+    email:
+      enabled: true
+      smtpServer: postfix.mail.svc.cluster.local:25
+      from: "Restic Operator <no-reply@example.com>"
+      to: "admin@example.com"
+      subject: "Restic Retention Policy Report"
+    ntfy:
+      enabled: true
+      serverURL: https://ntfy.example.com
+      topic: backups
+      onlyOnFailure: true
+
+  # Job configuration (optional)
+  jobConfig:
+    activeDeadlineSeconds: 7200
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+
+  # Suspend scheduling
+  suspend: false

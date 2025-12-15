@@ -1,0 +1,37 @@
+apiVersion: backup.resticbackup.io/v1alpha1
+kind: ResticRepository
+metadata:
+  name: example-repository
+  namespace: backup-system
+spec:
+  # Repository URL (s3:, sftp:, rest:, azure:, gs:, b2:, swift:)
+  repositoryURL: s3:s3.eu-central-1.wasabisys.com/my-backup-bucket
+
+  # Reference to secret containing credentials
+  # Required keys: RESTIC_PASSWORD
+  # Optional keys for S3: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+  credentialsSecretRef:
+    name: restic-repository-credentials
+
+  # Optional: Enable repository integrity checks
+  integrityCheck:
+    enabled: true
+    schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+
+  # Optional: Cache configuration
+  cache:
+    enabled: true
+    size: 5Gi
+    storageClassName: longhorn
+---
+# Example secret for the repository
+apiVersion: v1
+kind: Secret
+metadata:
+  name: restic-repository-credentials
+  namespace: backup-system
+type: Opaque
+stringData:
+  RESTIC_PASSWORD: "change-me-to-a-secure-password"
+  AWS_ACCESS_KEY_ID: "your-access-key-id"
+  AWS_SECRET_ACCESS_KEY: "your-secret-access-key"

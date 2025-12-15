@@ -1,0 +1,56 @@
+name: Helm Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  release-helm:
+    name: Release Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Setup Go
+        uses: https://github.com/actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Setup Helm
+        uses: https://github.com/azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Generate CRDs
+        run: make manifests
+
+      - name: Copy CRDs to Helm chart
+        run: |
+          mkdir -p charts/restic-backup-operator/crds
+          cp config/crd/bases/*.yaml charts/restic-backup-operator/crds/
+
+      - name: Update chart version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          sed -i "s/^version:.*/version: ${VERSION}/" charts/restic-backup-operator/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" charts/restic-backup-operator/Chart.yaml
+
+      - name: Run chart-releaser
+        uses: https://github.com/helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: charts
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

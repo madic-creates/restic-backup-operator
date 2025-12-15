@@ -1,0 +1,53 @@
+apiVersion: backup.resticbackup.io/v1alpha1
+kind: ResticRestore
+metadata:
+  name: example-restore
+  namespace: default
+spec:
+  # Reference to the ResticBackup CR (for repository info)
+  backupRef:
+    name: example-backup
+
+  # Option 1: Specify exact snapshot ID
+  # snapshotID: "abc123def456"
+
+  # Option 2: Use snapshot selector (finds matching snapshot)
+  snapshotSelector:
+    latest: true
+    tags:
+      - my-app
+    hostname: my-application
+    # before: "2024-01-15T00:00:00Z"
+
+  # Target configuration - restore to PVC
+  target:
+    # Option A: Restore to existing PVC
+    pvc:
+      claimName: my-restored-data
+      path: /
+
+    # Option B: Create new PVC (uncomment to use)
+    # newPVC:
+    #   name: my-new-restored-data
+    #   storageClassName: longhorn
+    #   accessModes:
+    #     - ReadWriteOnce
+    #   size: 50Gi
+
+  # Paths to restore (default: all)
+  includePaths:
+    - /data
+
+  # Paths to exclude from restore
+  excludePaths:
+    - "*.log"
+
+  # Restore options
+  options:
+    overwrite: true
+    verify: true
+
+  # Job configuration (optional)
+  jobConfig:
+    activeDeadlineSeconds: 7200
+    backoffLimit: 0

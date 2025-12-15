@@ -1,0 +1,90 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.resticbackup.io
+  resources:
+  - globalretentionpolicies
+  - resticbackups
+  - resticrepositories
+  - resticrestores
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.resticbackup.io
+  resources:
+  - globalretentionpolicies/finalizers
+  - resticbackups/finalizers
+  - resticrepositories/finalizers
+  - resticrestores/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - backup.resticbackup.io
+  resources:
+  - globalretentionpolicies/status
+  - resticbackups/status
+  - resticrepositories/status
+  - resticrestores/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

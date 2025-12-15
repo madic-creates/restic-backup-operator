@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - bases/backup.resticbackup.io_resticrepositories.yaml
+  - bases/backup.resticbackup.io_resticbackups.yaml
+  - bases/backup.resticbackup.io_resticrestores.yaml
+  - bases/backup.resticbackup.io_globalretentionpolicies.yaml

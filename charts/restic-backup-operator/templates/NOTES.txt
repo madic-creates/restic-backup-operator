@@ -1,0 +1,57 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named: {{ .Release.Name }}
+
+To verify the installation, run:
+
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "restic-backup-operator.name" . }}
+
+The operator is now watching for the following Custom Resources:
+  - ResticRepository
+  - ResticBackup
+  - ResticRestore
+  - GlobalRetentionPolicy
+
+To create your first backup:
+
+1. Create a ResticRepository with your backup destination:
+
+   kubectl apply -f - <<EOF
+   apiVersion: backup.resticbackup.io/v1alpha1
+   kind: ResticRepository
+   metadata:
+     name: my-repository
+     namespace: {{ .Release.Namespace }}
+   spec:
+     repositoryURL: s3:s3.eu-central-1.wasabisys.com/my-bucket
+     credentialsSecretRef:
+       name: restic-credentials
+   EOF
+
+2. Create a secret with your credentials:
+
+   kubectl create secret generic restic-credentials \
+     --namespace={{ .Release.Namespace }} \
+     --from-literal=RESTIC_PASSWORD=your-secure-password \
+     --from-literal=AWS_ACCESS_KEY_ID=your-key-id \
+     --from-literal=AWS_SECRET_ACCESS_KEY=your-secret-key
+
+3. Create a ResticBackup for your PVC:
+
+   kubectl apply -f - <<EOF
+   apiVersion: backup.resticbackup.io/v1alpha1
+   kind: ResticBackup
+   metadata:
+     name: my-backup
+     namespace: default
+   spec:
+     repositoryRef:
+       name: my-repository
+       namespace: {{ .Release.Namespace }}
+     schedule: "0 2 * * *"
+     source:
+       pvc:
+         claimName: my-pvc
+   EOF
+
+For more information, visit: {{ .Chart.Home }}

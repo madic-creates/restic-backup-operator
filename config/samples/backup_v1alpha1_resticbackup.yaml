@@ -1,0 +1,88 @@
+apiVersion: backup.resticbackup.io/v1alpha1
+kind: ResticBackup
+metadata:
+  name: example-backup
+  namespace: default
+spec:
+  # Reference to ResticRepository (can be in different namespace)
+  repositoryRef:
+    name: example-repository
+    namespace: backup-system
+
+  # Backup schedule (cron format)
+  schedule: "0 2 * * *"  # Daily at 2 AM
+
+  # Timezone for schedule interpretation
+  timezone: "Europe/Berlin"
+
+  # Source configuration - backup from PVC
+  source:
+    pvc:
+      claimName: my-application-data
+      paths:
+        - /data
+        - /config
+      excludes:
+        - "*.log"
+        - "cache/**"
+        - "tmp/**"
+
+  # Restic configuration
+  restic:
+    hostname: my-application
+    tags:
+      - my-app
+      - production
+    extraArgs:
+      - "--exclude-caches"
+    image: ghcr.io/restic/restic:0.18.0
+
+  # Retention policy (optional)
+  retention:
+    enabled: true
+    policy:
+      keepLast: 4
+      keepHourly: 48
+      keepDaily: 7
+      keepWeekly: 4
+      keepMonthly: 6
+      keepYearly: 1
+    prune: false
+
+  # Notifications (optional)
+  notifications:
+    pushgateway:
+      enabled: true
+      url: http://prometheus-pushgateway.monitoring.svc:9091
+      jobName: backup
+    ntfy:
+      enabled: true
+      serverURL: https://ntfy.example.com
+      topic: backups
+      credentialsSecretRef:
+        name: ntfy-credentials
+        key: auth-header
+      onlyOnFailure: true
+      priority: 4
+
+  # Job configuration (optional)
+  jobConfig:
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+    activeDeadlineSeconds: 3600
+    backoffLimit: 0
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "1000m"
+
+  # Network policy (optional)
+  networkPolicy:
+    enabled: true
+
+  # Suspend scheduling (useful for maintenance)
+  suspend: false

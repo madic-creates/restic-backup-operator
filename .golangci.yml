@@ -1,0 +1,32 @@
+run:
+  timeout: 5m
+  allow-parallel-runners: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - unconvert
+    - unparam
+    - prealloc
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/madic-creates/restic-backup-operator
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - unparam
+    - path: zz_generated
+      linters:
+        - all

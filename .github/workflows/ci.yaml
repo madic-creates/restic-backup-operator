@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  GO_VERSION: '1.23'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v4
+
+      - name: Setup Go
+        uses: https://github.com/actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run golangci-lint
+        uses: https://github.com/golangci/golangci-lint-action@v6
+        with:
+          version: v1.62.2
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v4
+
+      - name: Setup Go
+        uses: https://github.com/actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload coverage to Codecov
+        uses: https://github.com/codecov/codecov-action@v4
+        if: github.server_url == 'https://github.com'
+        with:
+          files: ./cover.out
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v4
+
+      - name: Setup Go
+        uses: https://github.com/actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Generate code
+        run: make generate
+
+      - name: Generate manifests
+        run: make manifests
+
+      - name: Verify no changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Generated files are not up to date. Please run 'make generate manifests' and commit the changes."
+            git diff
+            exit 1
+          fi
+
+      - name: Build
+        run: make build
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: https://github.com/docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: https://github.com/docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ github.server_url == 'https://github.com' && 'ghcr.io' || format('{0}', github.server_url) }}/${{ github.repository }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  helm-lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v4
+
+      - name: Setup Helm
+        uses: https://github.com/azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Lint Helm chart
+        run: |
+          if [ -d "charts/restic-backup-operator" ]; then
+            helm lint charts/restic-backup-operator
+          else
+            echo "Helm chart not found, skipping lint"
+          fi
