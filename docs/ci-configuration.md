@@ -61,6 +61,25 @@ Optional. Used by the CI workflow to upload test coverage reports to Codecov. On
 
 ## Variables
 
+### DOCKER_HOST
+
+Used by the CI workflow's Docker Build job to connect to the Docker daemon.
+
+| Platform | Behavior                                                                 |
+|----------|--------------------------------------------------------------------------|
+| GitHub   | Not required (uses default Unix socket `/var/run/docker.sock`)           |
+| Forgejo  | Required when using Docker-in-Docker (DinD) setup                        |
+
+**Configuration for Forgejo with Docker-in-Docker:**
+
+Set this repository variable under **Settings > Actions > Variables**:
+
+```
+DOCKER_HOST=tcp://docker-in-docker:2375
+```
+
+The value should match the hostname and port of your DinD container as configured in your runner setup.
+
 ### CONTAINER_REGISTRY
 
 Used by the release workflow to specify the container registry for Docker images.
@@ -96,9 +115,9 @@ REGISTRY: ${{ github.server_url == 'https://github.com' && 'ghcr.io' || format('
 
 ## Workflow Overview
 
-| Workflow       | Triggers                          | Required Secrets/Variables          |
-|----------------|-----------------------------------|-------------------------------------|
-| CI             | Push to main, PRs, manual         | CODECOV_TOKEN (optional)            |
-| Release        | Tags `v*`, manual                 | GITHUB_TOKEN, CONTAINER_REGISTRY    |
-| Helm Release   | Tags `v*`, manual                 | GITHUB_TOKEN                        |
-| Renovate       | Schedule, push to main, manual    | RENOVATE_TOKEN                      |
+| Workflow       | Triggers                          | Required Secrets/Variables                    |
+|----------------|-----------------------------------|-----------------------------------------------|
+| CI             | Push to main, PRs, manual         | CODECOV_TOKEN (optional), DOCKER_HOST (Forgejo) |
+| Release        | Tags `v*`, manual                 | GITHUB_TOKEN, CONTAINER_REGISTRY              |
+| Helm Release   | Tags `v*`, manual                 | GITHUB_TOKEN                                  |
+| Renovate       | Schedule, push to main, manual    | RENOVATE_TOKEN                                |
