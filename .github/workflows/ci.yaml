@@ -97,10 +97,12 @@ jobs:
 
       - name: Build Docker image
         uses: https://github.com/docker/build-push-action@v6
+        env:
+          REGISTRY: ${{ github.server_url == 'https://github.com' && 'ghcr.io' || format('{0}', replace(replace(github.server_url, 'https://', ''), 'http://', '')) }}
         with:
           context: .
           push: false
-          tags: ${{ github.server_url == 'https://github.com' && 'ghcr.io' || format('{0}', github.server_url) }}/${{ github.repository }}:test
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
