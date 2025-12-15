@@ -141,12 +141,12 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: https://github.com/docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-          driver-opts: |
-            network=host
-        env:
-          DOCKER_HOST: ${{ vars.DOCKER_HOST || '' }}
+        #with:
+        #  driver: docker-container
+        #  driver-opts: |
+        #    network=host
+        #env:
+        #  DOCKER_HOST: ${{ vars.DOCKER_HOST || '' }}
 
       - name: Determine registry
         id: registry
