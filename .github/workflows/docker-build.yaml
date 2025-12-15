@@ -1,0 +1,74 @@
+name: Docker Build
+
+on:
+  workflow_call:
+    inputs:
+      push:
+        description: 'Push image to registry'
+        required: false
+        default: true
+        type: boolean
+      tags:
+        description: 'Image tags (newline-separated)'
+        required: true
+        type: string
+      labels:
+        description: 'Image labels (newline-separated)'
+        required: false
+        default: ''
+        type: string
+      platforms:
+        description: 'Target platforms'
+        required: false
+        default: 'linux/amd64'
+        type: string
+    outputs:
+      registry:
+        description: 'Container registry used'
+        value: ${{ jobs.build.outputs.registry }}
+      image:
+        description: 'Full image reference'
+        value: ${{ jobs.build.outputs.image }}
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.registry.outputs.name }}
+      image: ${{ steps.registry.outputs.name }}/${{ github.repository }}
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: https://github.com/docker/setup-buildx-action@v3
+
+      - name: Determine registry
+        id: registry
+        run: |
+          if [ "${{ github.server_url }}" = "https://github.com" ]; then
+            echo "name=ghcr.io" >> $GITHUB_OUTPUT
+          else
+            # Strip protocol from server URL for Forgejo
+            REGISTRY=$(echo "${{ github.server_url }}" | sed 's|https://||' | sed 's|http://||')
+            echo "name=${REGISTRY}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to registry
+        uses: https://github.com/docker/login-action@v3
+        with:
+          registry: ${{ steps.registry.outputs.name }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: https://github.com/docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ inputs.push }}
+          platforms: ${{ inputs.platforms }}
+          tags: ${{ inputs.tags }}
+          labels: ${{ inputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
