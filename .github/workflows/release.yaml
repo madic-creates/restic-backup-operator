@@ -61,6 +61,7 @@ jobs:
     with:
       tags: ${{ needs.prepare.outputs.tags }}
       labels: ${{ needs.prepare.outputs.labels }}
+    secrets: inherit
 
   release:
     name: Create Release

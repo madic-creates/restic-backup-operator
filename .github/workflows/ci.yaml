@@ -140,6 +140,7 @@ jobs:
     uses: ./.github/workflows/docker-build.yaml
     with:
       tags: ${{ github.server_url == 'https://github.com' && format('ghcr.io/{0}:{1}', github.repository, github.sha) || format('{0}/{1}:{2}', vars.CONTAINER_REGISTRY, github.repository, github.sha) }}
+    secrets: inherit
 
   helm-lint:
     name: Helm Lint
