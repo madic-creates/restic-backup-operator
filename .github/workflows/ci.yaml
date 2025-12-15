@@ -63,7 +63,7 @@ jobs:
       - name: Run golangci-lint
         uses: https://github.com/golangci/golangci-lint-action@v9
         with:
-          version: v1.62.2
+          version: v2.1.6
 
   test:
     name: Test
