@@ -90,6 +90,11 @@ Uses Ginkgo v2 + Gomega with envtest for embedded Kubernetes API server. Test se
 ## Language Requirements
 - All commits, comments, documentation, and code must be written in English
 
+## Release Process
+- **DO NOT** manually edit `Chart.yaml` version when creating releases
+- The helm-release GitHub Actions pipeline automatically sets the chart version based on the git tag
+- To create a release: push changes to main, then create a git tag (e.g., `v0.0.5`) and push it
+
 ## CLAUDE.md Maintenance
 This file should be automatically updated with important changes:
 - New CRDs or controllers
