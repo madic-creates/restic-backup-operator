@@ -1,0 +1,55 @@
+apiVersion: v1
+entries:
+  restic-backup-operator:
+  - annotations:
+      artifacthub.io/crds: |
+        - kind: ResticRepository
+          version: v1alpha1
+          name: resticrepositories.backup.resticbackup.io
+          displayName: Restic Repository
+          description: Defines a restic repository configuration
+        - kind: ResticBackup
+          version: v1alpha1
+          name: resticbackups.backup.resticbackup.io
+          displayName: Restic Backup
+          description: Defines a backup job with scheduling
+        - kind: ResticRestore
+          version: v1alpha1
+          name: resticrestores.backup.resticbackup.io
+          displayName: Restic Restore
+          description: Defines a restore operation
+        - kind: GlobalRetentionPolicy
+          version: v1alpha1
+          name: globalretentionpolicies.backup.resticbackup.io
+          displayName: Global Retention Policy
+          description: Defines cluster-wide retention policies
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/operator: "true"
+      artifacthub.io/operatorCapabilities: Full Lifecycle
+      artifacthub.io/prerelease: "true"
+    apiVersion: v2
+    appVersion: 0.0.2
+    created: "2025-12-16T20:08:24.873815088Z"
+    description: A Kubernetes operator for managing restic-based backups of Persistent
+      Volumes and database dumps
+    digest: 70dffc0b95747a1f29c9f7f2dc5f36394d32dea9b1590bec9eccfd41fdd27053
+    home: https://github.com/madic-creates/restic-backup-operator
+    keywords:
+    - backup
+    - restic
+    - kubernetes
+    - operator
+    - pvc
+    - persistent-volume
+    kubeVersion: '>=1.26.0-0'
+    maintainers:
+    - name: madic-creates
+      url: https://github.com/madic-creates
+    name: restic-backup-operator
+    sources:
+    - https://github.com/madic-creates/restic-backup-operator
+    type: application
+    urls:
+    - https://github.com/madic-creates/restic-backup-operator/releases/download/restic-backup-operator-0.0.2/restic-backup-operator-0.0.2.tgz
+    version: 0.0.2
+generated: "2025-12-16T20:08:24.873824545Z"
