@@ -49,9 +49,13 @@ jobs:
           sed -i "s/^version:.*/version: ${VERSION}/" charts/restic-backup-operator/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" charts/restic-backup-operator/Chart.yaml
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+      - name: Package Helm chart
+        run: |
+          helm package charts/restic-backup-operator -d .helm-packages
+
+      - name: Upload Helm chart to release
+        uses: softprops/action-gh-release@v2
         with:
-          charts_dir: charts
+          files: .helm-packages/*.tgz
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
