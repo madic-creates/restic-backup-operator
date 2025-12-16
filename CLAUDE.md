@@ -87,10 +87,6 @@ Uses Ginkgo v2 + Gomega with envtest for embedded Kubernetes API server. Test se
 - controller-tools: v0.18.0
 - golangci-lint: v2.7.2
 
-## CI/CD Guidelines
-- GitHub Workflows must be compatible with both GitHub and Forgejo
-- Avoid GitHub-specific features that are not supported in Forgejo
-
 ## Language Requirements
 - All commits, comments, documentation, and code must be written in English
 

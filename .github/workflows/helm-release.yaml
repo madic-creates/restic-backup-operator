@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: https://github.com/actions/checkout@v6
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -26,12 +26,12 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Setup Go
-        uses: https://github.com/actions/setup-go@v6
+        uses: actions/setup-go@v6
         with:
           go-version: '1.25'
 
       - name: Setup Helm
-        uses: https://github.com/azure/setup-helm@v4
+        uses: azure/setup-helm@v4
         with:
           version: v3.16.0
 
@@ -50,7 +50,7 @@ jobs:
           sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" charts/restic-backup-operator/Chart.yaml
 
       - name: Run chart-releaser
-        uses: https://github.com/helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: charts
         env:

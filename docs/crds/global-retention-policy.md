@@ -60,7 +60,7 @@ spec:
       enabled: true
       smtpServer: postfix.media.svc.cluster.local:25
       from: "Restic Operator <no-reply@geekbundle.org>"
-      to: "webmaster@geekbundle.org"
+      to: "notification@example.com"
       subject: "Restic Retention Policy Report"
 
 status:
