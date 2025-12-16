@@ -48,6 +48,8 @@ type ResticRepositoryReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	// Executor is optional - if nil, a default executor will be created
+	Executor restic.Executor
 }
 
 // +kubebuilder:rbac:groups=backup.resticbackup.io,resources=resticrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -97,8 +99,11 @@ func (r *ResticRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{RequeueAfter: errorRequeueInterval}, nil
 	}
 
-	// Create restic executor
-	executor := restic.NewExecutor(log)
+	// Get restic executor (use injected one or create default)
+	executor := r.Executor
+	if executor == nil {
+		executor = restic.NewExecutor(log)
+	}
 
 	// Check if repository exists and is accessible
 	checkResult, err := executor.Check(ctx, creds)

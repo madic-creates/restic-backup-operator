@@ -32,7 +32,47 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
+	"github.com/madic-creates/restic-backup-operator/internal/restic"
 )
+
+// MockExecutor is a test executor that returns success for all operations
+type MockExecutor struct{}
+
+func (m *MockExecutor) Init(_ context.Context, _ restic.Credentials) error {
+	return nil
+}
+
+func (m *MockExecutor) Check(_ context.Context, _ restic.Credentials) (*restic.CheckResult, error) {
+	return &restic.CheckResult{Success: true}, nil
+}
+
+func (m *MockExecutor) Stats(_ context.Context, _ restic.Credentials, _ restic.StatsOptions) (*restic.RepoStats, error) {
+	return &restic.RepoStats{
+		TotalSize:      1024,
+		TotalFileCount: 10,
+		SnapshotCount:  1,
+	}, nil
+}
+
+func (m *MockExecutor) Snapshots(_ context.Context, _ restic.Credentials) ([]restic.Snapshot, error) {
+	return []restic.Snapshot{}, nil
+}
+
+func (m *MockExecutor) Backup(_ context.Context, _ restic.Credentials, _ restic.BackupOptions) (*restic.BackupResult, error) {
+	return &restic.BackupResult{}, nil
+}
+
+func (m *MockExecutor) Restore(_ context.Context, _ restic.Credentials, _ restic.RestoreOptions) (*restic.RestoreResult, error) {
+	return &restic.RestoreResult{}, nil
+}
+
+func (m *MockExecutor) Forget(_ context.Context, _ restic.Credentials, _ restic.ForgetOptions) (*restic.ForgetResult, error) {
+	return &restic.ForgetResult{}, nil
+}
+
+func (m *MockExecutor) Prune(_ context.Context, _ restic.Credentials) (*restic.PruneResult, error) {
+	return &restic.PruneResult{}, nil
+}
 
 var (
 	cfg       *rest.Config
@@ -81,6 +121,7 @@ var _ = BeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("resticrepository-controller"),
+		Executor: &MockExecutor{},
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
