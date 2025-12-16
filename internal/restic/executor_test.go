@@ -363,11 +363,10 @@ func TestDefaultExecutor_ContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 
 	// The operation should fail due to context cancellation
-	_, err := executor.Check(ctx, creds)
-	if err == nil {
-		// It's okay if the error is from context cancellation or from restic itself
-		// The main point is that the context is respected
-	}
+	// We don't assert the error because it may be nil (if restic isn't installed)
+	// or non-nil (context cancellation or restic error). The main point is that
+	// the context is passed through and the code doesn't panic or hang.
+	_, _ = executor.Check(ctx, creds)
 }
 
 // Integration tests that require restic binary
