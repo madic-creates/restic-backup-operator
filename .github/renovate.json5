@@ -1,86 +1,73 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "docker:enableMajor",
-    ":semanticCommits",
-    ":automergeMinor",
-    "group:allNonMajor"
-  ],
-  "assignees": [
-    "madic"
-  ],
-  "labels": ["dependencies"],
-  "prHourlyLimit": 5,
-  "prConcurrentLimit": 10,
-  "minimumReleaseAge": "5 days",
-  "vulnerabilityAlerts": {
-    "enabled": true,
-    "labels": ["security"]
-  },
-  "packageRules": [
-    {
-      "description": "Go modules",
-      "matchManagers": ["gomod"],
-      "enabled": true,
-      "groupName": "go modules"
-    },
-    {
-      "description": "GitHub Actions",
-      "matchManagers": ["github-actions"],
-      "enabled": true,
-      "groupName": "github actions",
-      "automerge": true
-    },
-    {
-      "description": "Docker base images",
-      "matchManagers": ["dockerfile"],
-      "enabled": true
-    },
-    {
-      "description": "Helm charts",
-      "matchManagers": ["helmv3", "helm-values"],
-      "enabled": true
-    },
-    {
-      "description": "Kubernetes manifests",
-      "matchManagers": ["kubernetes"],
-      "enabled": true
-    },
-    {
-      "description": "Auto-merge patch updates",
-      "matchUpdateTypes": ["patch"],
-      "automerge": true,
-      "automergeType": "pr"
-    },
-    {
-      "description": "Do not auto-merge major updates",
-      "matchUpdateTypes": ["major"],
-      "automerge": false
-    }
-  ],
-  "automerge": true,
-  "automergeType": "branch",
-  "major": {
-    "automerge": false
-  },
-  "minor": {
-    "automerge": true
-  },
-  "patch": {
-    "automerge": true
-  },
-  "postUpdateOptions": ["gomodTidy"],
-  "gomod": {
-    "enabled": true
-  },
-  "dockerfile": {
-    "enabled": true
-  },
-  "kubernetes": {
-    "fileMatch": ["(^|/)manifests/.+\\.ya?ml$", "(^|/)config/.+\\.ya?ml$"]
-  },
-  "helm-values": {
-    "fileMatch": ["(^|/)charts/.+/values\\.ya?ml$"]
-  }
+         "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+         "extends": [
+           "config:recommended",
+           "docker:enableMajor",
+           ":semanticCommits",
+           ":automergeMinor",
+           "group:allNonMajor"
+         ],
+         "assignees": ["madic-creates"],
+         "labels": ["dependencies"],
+         "prHourlyLimit": 5,
+         "prConcurrentLimit": 10,
+         "minimumReleaseAge": "5 days",
+         "vulnerabilityAlerts": {"enabled": true, "labels": ["security"]},
+         "packageRules": [
+           {
+             "description": "Go modules",
+             "matchManagers": ["gomod"],
+             "enabled": true,
+             "groupName": "go modules"
+           },
+           {
+             "description": "GitHub Actions",
+             "matchManagers": ["github-actions"],
+             "enabled": true,
+             "groupName": "github actions",
+             "automerge": true
+           },
+           {
+             "description": "Docker base images",
+             "matchManagers": ["dockerfile"],
+             "enabled": true
+           },
+           {
+             "description": "Helm charts",
+             "matchManagers": ["helmv3", "helm-values"],
+             "enabled": true
+           },
+           {
+             "description": "Kubernetes manifests",
+             "matchManagers": ["kubernetes"],
+             "enabled": true
+           },
+           {
+             "description": "Auto-merge patch updates",
+             "matchUpdateTypes": ["patch"],
+             "automerge": true,
+             "automergeType": "pr"
+           },
+           {
+             "description": "Do not auto-merge major updates",
+             "matchUpdateTypes": ["major"],
+             "automerge": false
+           }
+         ],
+         "automerge": true,
+         "automergeType": "branch",
+         "major": {"automerge": false},
+         "minor": {"automerge": true},
+         "patch": {"automerge": true},
+         "postUpdateOptions": ["gomodTidy"],
+         "gomod": {"enabled": true},
+         "dockerfile": {"enabled": true},
+         "kubernetes": {
+           "managerFilePatterns": [
+             "/(^|/)manifests/.+\\.ya?ml$/",
+             "/(^|/)config/.+\\.ya?ml$/"
+           ]
+         },
+         "helm-values": {"managerFilePatterns": ["/(^|/)charts/.+/values\\.ya?ml$/"]}
+       }
 }
