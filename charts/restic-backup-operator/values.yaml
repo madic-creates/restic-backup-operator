@@ -1,5 +1,14 @@
 # Default values for restic-backup-operator
 
+# CRD configuration
+crds:
+  # Install CRDs as part of the Helm release
+  # Set to false if CRDs are managed separately or already installed
+  install: true
+  # Annotations to add to the CRDs
+  # annotations:
+  #   helm.sh/resource-policy: keep
+
 replicaCount: 1
 
 image:
@@ -97,11 +106,6 @@ metrics:
     interval: 30s
     scrapeTimeout: 10s
     additionalLabels: {}
-
-# Network policy for the operator pod
-networkPolicy:
-  enabled: false
-  egress: []
 
 # Default restic image for backup jobs
 defaultResticImage: ghcr.io/restic/restic:0.18.1
