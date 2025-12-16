@@ -60,4 +60,4 @@ jobs:
 
       - name: Push Helm chart to OCI registry
         run: |
-          helm push .helm-packages/*.tgz ${{ env.REGISTRY }}/${{ github.repository_owner }}/charts
+          helm push .helm-packages/*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts
