@@ -7,8 +7,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pages: write
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
 
 jobs:
   release-helm:
@@ -19,11 +22,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -49,13 +47,17 @@ jobs:
           sed -i "s/^version:.*/version: ${VERSION}/" charts/restic-backup-operator/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" charts/restic-backup-operator/Chart.yaml
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Package Helm chart
         run: |
           helm package charts/restic-backup-operator -d .helm-packages
 
-      - name: Upload Helm chart to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: .helm-packages/*.tgz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push Helm chart to OCI registry
+        run: |
+          helm push .helm-packages/*.tgz ${{ env.REGISTRY }}/${{ github.repository_owner }}/charts

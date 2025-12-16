@@ -9,15 +9,20 @@
 
 ## Installation Methods
 
-### Helm
+### Helm (OCI Registry)
 
 ```bash
-# Add the Helm repository
-helm repo add restic-backup-operator https://your-chart-repo.example.com
-helm repo update
+# Install the operator directly from OCI registry
+helm install restic-backup-operator oci://ghcr.io/madic-creates/charts/restic-backup-operator \
+  --namespace backup-system \
+  --create-namespace
+```
 
-# Install the operator
-helm install restic-backup-operator restic-backup-operator/restic-backup-operator \
+To install a specific version:
+
+```bash
+helm install restic-backup-operator oci://ghcr.io/madic-creates/charts/restic-backup-operator \
+  --version 0.1.0 \
   --namespace backup-system \
   --create-namespace
 ```
@@ -30,7 +35,7 @@ Example `values.yaml`:
 replicaCount: 1
 
 image:
-  repository: ghcr.io/your-org/restic-backup-operator
+  repository: ghcr.io/madic-creates/restic-backup-operator
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -65,7 +70,7 @@ config:
 Install with custom values:
 
 ```bash
-helm install restic-backup-operator restic-backup-operator/restic-backup-operator \
+helm install restic-backup-operator oci://ghcr.io/madic-creates/charts/restic-backup-operator \
   --namespace backup-system \
   --create-namespace \
   -f values.yaml
@@ -82,7 +87,7 @@ kind: Kustomization
 namespace: backup-system
 
 resources:
-  - https://github.com/your-org/restic-backup-operator/config/default?ref=v0.1.0
+  - https://github.com/madic-creates/restic-backup-operator/config/default?ref=v0.0.3
 
 # Optional: patch resources
 patches:
@@ -102,7 +107,7 @@ kubectl create namespace backup-system
 kubectl apply -k .
 ```
 
-### Kustomize with Helm
+### Kustomize with Helm (OCI)
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -112,7 +117,7 @@ namespace: backup-system
 
 helmCharts:
   - name: restic-backup-operator
-    repo: https://your-chart-repo.example.com
+    repo: oci://ghcr.io/madic-creates/charts
     version: 0.1.0
     releaseName: restic-backup-operator
     namespace: backup-system
