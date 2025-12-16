@@ -112,10 +112,7 @@ helm-crds: manifests ## Generate CRDs as Helm templates (allows installation wit
 	@echo "Generating CRD templates..."
 	@mkdir -p charts/restic-backup-operator/templates
 	@echo '{{- if .Values.crds.install }}' > charts/restic-backup-operator/templates/crds.yaml
-	@for file in config/crd/bases/*.yaml; do \
-		echo "---" >> charts/restic-backup-operator/templates/crds.yaml; \
-		cat $$file >> charts/restic-backup-operator/templates/crds.yaml; \
-	done
+	@cat config/crd/bases/*.yaml >> charts/restic-backup-operator/templates/crds.yaml
 	@echo '{{- end }}' >> charts/restic-backup-operator/templates/crds.yaml
 	@echo "CRD templates generated successfully"
 
