@@ -33,13 +33,8 @@ jobs:
         with:
           version: v3.16.0
 
-      - name: Generate CRDs
-        run: make manifests
-
-      - name: Copy CRDs to Helm chart
-        run: |
-          mkdir -p charts/restic-backup-operator/crds
-          cp config/crd/bases/*.yaml charts/restic-backup-operator/crds/
+      - name: Generate CRDs and copy to Helm chart templates
+        run: make helm-crds
 
       - name: Update chart version
         run: |

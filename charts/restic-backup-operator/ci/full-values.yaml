@@ -1,0 +1,80 @@
+# Test full configuration with all features enabled
+crds:
+  install: true
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/madic-creates/restic-backup-operator
+  pullPolicy: Always
+  tag: "v0.1.0"
+
+imagePullSecrets:
+  - name: regcred
+
+nameOverride: "backup-op"
+fullnameOverride: "restic-backup-operator-full"
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/backup-operator
+  name: "custom-sa"
+
+rbac:
+  create: true
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8081"
+
+podLabels:
+  app.kubernetes.io/component: backup
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "backup"
+    effect: "NoSchedule"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64
+                - arm64
+
+leaderElection:
+  enabled: true
+  resourceName: "custom-leader-election"
+
+logging:
+  level: debug
+  format: text
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 15s
+    scrapeTimeout: 5s
+    additionalLabels:
+      release: prometheus
+
+defaultResticImage: restic/restic:0.17.0

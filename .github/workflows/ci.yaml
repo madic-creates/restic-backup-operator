@@ -159,7 +159,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   helm-lint:
-    name: Helm Lint
+    name: Helm Lint and Template Test
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.helm == 'true' || github.event_name == 'workflow_dispatch'
@@ -172,10 +172,28 @@ jobs:
         with:
           version: v3.16.0
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.31.0
+
       - name: Lint Helm chart
         run: |
           if [ -d "charts/restic-backup-operator" ]; then
             helm lint charts/restic-backup-operator
           else
             echo "Helm chart not found, skipping lint"
+          fi
+
+      - name: Test Helm templates with kubectl dry-run
+        run: |
+          if [ -d "charts/restic-backup-operator" ]; then
+            for values_file in charts/restic-backup-operator/ci/*.yaml; do
+              echo "Testing with ${values_file}..."
+              helm template test-release charts/restic-backup-operator -f "${values_file}" | kubectl apply --dry-run=client -f - > /dev/null
+              echo "  ✓ Template renders and validates successfully"
+            done
+            echo "All Helm template tests passed!"
+          else
+            echo "Helm chart not found, skipping template test"
           fi

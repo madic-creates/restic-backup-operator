@@ -120,6 +120,16 @@ helm-crds: manifests ## Generate CRDs as Helm templates (allows installation wit
 helm-lint: ## Lint Helm chart.
 	helm lint charts/restic-backup-operator
 
+.PHONY: helm-test
+helm-test: helm-crds ## Test Helm chart templates and validate with kubectl dry-run.
+	@echo "Testing Helm chart templates..."
+	@for values_file in charts/restic-backup-operator/ci/*.yaml; do \
+		echo "Testing with $${values_file}..."; \
+		helm template test-release charts/restic-backup-operator -f $${values_file} | kubectl apply --dry-run=client -f - > /dev/null || exit 1; \
+		echo "  ✓ Template renders and validates successfully"; \
+	done
+	@echo "All Helm template tests passed!"
+
 .PHONY: helm-package
 helm-package: helm-crds ## Package Helm chart.
 	helm package charts/restic-backup-operator
