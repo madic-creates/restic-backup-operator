@@ -16,7 +16,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 env:
@@ -94,3 +94,23 @@ jobs:
       - name: Push Helm chart to OCI registry
         run: |
           helm push .helm-packages/*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: helm-v${{ steps.versions.outputs.chart_version }}
+          name: Helm Chart v${{ steps.versions.outputs.chart_version }}
+          body: |
+            ## Helm Chart Release
+
+            **Chart Version:** ${{ steps.versions.outputs.chart_version }}
+            **App Version:** ${{ steps.versions.outputs.app_version }}
+
+            ### Installation
+
+            ```bash
+            helm install restic-backup-operator oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts/restic-backup-operator --version ${{ steps.versions.outputs.chart_version }}
+            ```
+          draft: false
+          prerelease: false
+          make_latest: false
