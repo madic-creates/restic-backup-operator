@@ -90,7 +90,7 @@ docker-buildx: ## Build and push docker image for cross-platform support.
 
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | kubectl apply --server-side -f -
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
@@ -99,7 +99,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | kubectl apply --server-side -f -
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
@@ -139,9 +139,10 @@ helm-package: helm-crds ## Package Helm chart.
 	helm package charts/restic-backup-operator
 
 .PHONY: helm-install
-helm-install: helm-crds ## Install Helm chart locally.
+helm-install: helm-crds ## Install Helm chart locally (uses server-side apply for large CRDs).
+	kubectl apply --server-side -f config/crd/bases/
 	helm upgrade --install restic-backup-operator charts/restic-backup-operator \
-		--namespace backup-system --create-namespace
+		--namespace backup-system --create-namespace --set crds.install=false
 
 ##@ Dependencies
 

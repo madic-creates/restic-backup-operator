@@ -183,6 +183,8 @@ type ExecHook struct {
 type JobHook struct {
 	// PodTemplate defines the pod specification for the hook job.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
 	PodTemplate corev1.PodTemplateSpec `json:"podTemplate"`
 }
 
@@ -257,10 +259,14 @@ type JobConfiguration struct {
 
 	// SecurityContext defines the security context for the backup pod.
 	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
 	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 
 	// Resources defines resource requirements for the backup container.
 	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 
 	// NodeSelector defines node selection constraints.
@@ -269,10 +275,14 @@ type JobConfiguration struct {
 
 	// Tolerations defines pod tolerations.
 	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 
 	// Affinity defines pod affinity rules.
 	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`
 
 	// ServiceAccountName specifies the service account for the backup pod.

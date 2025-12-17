@@ -2,8 +2,8 @@
 
 # CRD configuration
 crds:
-  # Install CRDs as part of the Helm release
-  # Set to false if CRDs are managed separately or already installed
+  # Install CRDs as part of the Helm release.
+  # Set to false if CRDs are managed separately or already installed.
   install: true
   # Annotations to add to the CRDs
   # annotations:

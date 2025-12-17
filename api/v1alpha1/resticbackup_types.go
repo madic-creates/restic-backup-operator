@@ -55,6 +55,8 @@ type PodVolumeBackupSource struct {
 type CustomSource struct {
 	// PodTemplate defines the pod specification for the custom backup.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
 	PodTemplate corev1.PodTemplateSpec `json:"podTemplate"`
 
 	// BackupPath is the path in the pod where backup data is written.
