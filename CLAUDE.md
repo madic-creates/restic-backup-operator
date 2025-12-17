@@ -91,9 +91,33 @@ Uses Ginkgo v2 + Gomega with envtest for embedded Kubernetes API server. Test se
 - All commits, comments, documentation, and code must be written in English
 
 ## Release Process
-- **DO NOT** manually edit `Chart.yaml` version when creating releases
-- The helm-release GitHub Actions pipeline automatically sets the chart version based on the git tag
-- To create a release: push changes to main, then create a git tag (e.g., `v0.0.5`) and push it
+
+App and Helm chart releases are independent. **DO NOT** manually edit `Chart.yaml` version.
+
+### App Release (Docker image)
+- Triggered by `v*` tags (e.g., `v1.0.0`)
+- Builds and pushes Docker image to ghcr.io
+- Creates GitHub release with CRD artifacts
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### Helm Chart Release
+- Triggered by `helm-v*` tags (e.g., `helm-v1.0.0`)
+- Chart version is set from the tag (e.g., `helm-v1.0.0` → chart version `1.0.0`)
+- App version is automatically set to the latest `v*` tag
+- Pushes chart to OCI registry at ghcr.io
+
+```bash
+git tag helm-v1.0.0
+git push origin helm-v1.0.0
+```
+
+### Manual Helm Release (workflow_dispatch)
+- Can be triggered manually from GitHub Actions
+- Allows specifying custom chart version and app version
 
 ## CLAUDE.md Maintenance
 This file should be automatically updated with important changes:
