@@ -113,4 +113,4 @@ jobs:
             ```
           draft: false
           prerelease: false
-          make_latest: false
+          make_latest: 'false'
