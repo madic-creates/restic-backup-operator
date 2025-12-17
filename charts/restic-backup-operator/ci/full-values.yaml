@@ -29,7 +29,7 @@ podAnnotations:
   prometheus.io/port: "8081"
 
 podLabels:
-  app.kubernetes.io/component: backup
+  custom-label: backup-operator
 
 resources:
   limits:

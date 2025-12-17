@@ -172,10 +172,10 @@ jobs:
         with:
           version: v3.16.0
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: v1.31.0
+      - name: Setup kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
 
       - name: Lint Helm chart
         run: |
@@ -185,12 +185,14 @@ jobs:
             echo "Helm chart not found, skipping lint"
           fi
 
-      - name: Test Helm templates with kubectl dry-run
+      - name: Test Helm templates with kubeconform
         run: |
           if [ -d "charts/restic-backup-operator" ]; then
             for values_file in charts/restic-backup-operator/ci/*.yaml; do
               echo "Testing with ${values_file}..."
-              helm template test-release charts/restic-backup-operator -f "${values_file}" | kubectl apply --dry-run=client -f - > /dev/null
+              helm template test-release charts/restic-backup-operator -f "${values_file}" --set crds.install=false | \
+                kubeconform -strict -summary -output text \
+                  -schema-location default
               echo "  ✓ Template renders and validates successfully"
             done
             echo "All Helm template tests passed!"

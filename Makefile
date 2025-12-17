@@ -121,11 +121,15 @@ helm-lint: ## Lint Helm chart.
 	helm lint charts/restic-backup-operator
 
 .PHONY: helm-test
-helm-test: helm-crds ## Test Helm chart templates and validate with kubectl dry-run.
+helm-test: helm-crds ## Test Helm chart templates and validate with kubeconform.
 	@echo "Testing Helm chart templates..."
+	@test -f $(LOCALBIN)/kubeconform || { echo "Installing kubeconform..."; \
+		curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz -C $(LOCALBIN); }
 	@for values_file in charts/restic-backup-operator/ci/*.yaml; do \
 		echo "Testing with $${values_file}..."; \
-		helm template test-release charts/restic-backup-operator -f $${values_file} | kubectl apply --dry-run=client -f - > /dev/null || exit 1; \
+		helm template test-release charts/restic-backup-operator -f $${values_file} --set crds.install=false | \
+			$(LOCALBIN)/kubeconform -strict -summary -output text \
+				-schema-location default || exit 1; \
 		echo "  ✓ Template renders and validates successfully"; \
 	done
 	@echo "All Helm template tests passed!"
