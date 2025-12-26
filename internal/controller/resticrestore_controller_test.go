@@ -103,8 +103,6 @@ var _ = Describe("ResticRestore Controller", func() {
 
 			repository := &backupv1alpha1.ResticRepository{}
 			if err := k8sClient.Get(ctx, repositoryKey, repository); err == nil {
-				controllerutil.RemoveFinalizer(repository, resticRepositoryFinalizer)
-				_ = k8sClient.Update(ctx, repository)
 				_ = k8sClient.Delete(ctx, repository)
 			}
 

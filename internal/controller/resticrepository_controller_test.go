@@ -24,7 +24,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
 )
@@ -63,8 +62,6 @@ var _ = Describe("ResticRepository Controller", func() {
 			// Clean up resources
 			repository := &backupv1alpha1.ResticRepository{}
 			if err := k8sClient.Get(ctx, repositoryKey, repository); err == nil {
-				controllerutil.RemoveFinalizer(repository, resticRepositoryFinalizer)
-				_ = k8sClient.Update(ctx, repository)
 				_ = k8sClient.Delete(ctx, repository)
 			}
 
@@ -77,44 +74,6 @@ var _ = Describe("ResticRepository Controller", func() {
 			if err := k8sClient.Get(ctx, types.NamespacedName{Name: testNamespace}, ns); err == nil {
 				_ = k8sClient.Delete(ctx, ns)
 			}
-		})
-
-		It("should add finalizer when created", func() {
-			// Create the credentials secret first
-			secret := &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      secretKey.Name,
-					Namespace: secretKey.Namespace,
-				},
-				Data: map[string][]byte{
-					"RESTIC_PASSWORD": []byte("test-password"),
-				},
-			}
-			Expect(k8sClient.Create(ctx, secret)).To(Succeed())
-
-			// Create the ResticRepository
-			repository := &backupv1alpha1.ResticRepository{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      repositoryKey.Name,
-					Namespace: repositoryKey.Namespace,
-				},
-				Spec: backupv1alpha1.ResticRepositorySpec{
-					RepositoryURL: "local:/tmp/test-repo",
-					CredentialsSecretRef: backupv1alpha1.SecretKeySelector{
-						Name: secretKey.Name,
-					},
-				},
-			}
-			Expect(k8sClient.Create(ctx, repository)).To(Succeed())
-
-			// Verify finalizer is added
-			Eventually(func() bool {
-				repo := &backupv1alpha1.ResticRepository{}
-				if err := k8sClient.Get(ctx, repositoryKey, repo); err != nil {
-					return false
-				}
-				return controllerutil.ContainsFinalizer(repo, resticRepositoryFinalizer)
-			}, timeout, interval).Should(BeTrue())
 		})
 
 		It("should set NotReady condition when credentials secret does not exist", func() {
@@ -191,7 +150,7 @@ var _ = Describe("ResticRepository Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 		})
 
-		It("should remove finalizer on deletion", func() {
+		It("should delete successfully", func() {
 			// Create the credentials secret first
 			secret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
@@ -218,15 +177,6 @@ var _ = Describe("ResticRepository Controller", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, repository)).To(Succeed())
-
-			// Wait for finalizer to be added
-			Eventually(func() bool {
-				repo := &backupv1alpha1.ResticRepository{}
-				if err := k8sClient.Get(ctx, repositoryKey, repo); err != nil {
-					return false
-				}
-				return controllerutil.ContainsFinalizer(repo, resticRepositoryFinalizer)
-			}, timeout, interval).Should(BeTrue())
 
 			// Delete the repository
 			Expect(k8sClient.Delete(ctx, repository)).To(Succeed())

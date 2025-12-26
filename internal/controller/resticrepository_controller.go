@@ -29,7 +29,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	backupv1alpha1 "github.com/madic-creates/restic-backup-operator/api/v1alpha1"
@@ -38,9 +37,8 @@ import (
 )
 
 const (
-	resticRepositoryFinalizer = "backup.resticbackup.io/resticrepository-finalizer"
-	defaultRequeueInterval    = 1 * time.Hour
-	errorRequeueInterval      = 30 * time.Second
+	defaultRequeueInterval = 1 * time.Hour
+	errorRequeueInterval   = 30 * time.Second
 )
 
 // ResticRepositoryReconciler reconciles a ResticRepository object
@@ -54,7 +52,6 @@ type ResticRepositoryReconciler struct {
 
 // +kubebuilder:rbac:groups=backup.resticbackup.io,resources=resticrepositories,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.resticbackup.io,resources=resticrepositories/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=backup.resticbackup.io,resources=resticrepositories/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
@@ -72,19 +69,6 @@ func (r *ResticRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		log.Error(err, "Failed to get ResticRepository")
 		return ctrl.Result{}, err
-	}
-
-	// Handle deletion
-	if !repository.DeletionTimestamp.IsZero() {
-		return r.handleDeletion(ctx, repository)
-	}
-
-	// Add finalizer if missing
-	if !controllerutil.ContainsFinalizer(repository, resticRepositoryFinalizer) {
-		controllerutil.AddFinalizer(repository, resticRepositoryFinalizer)
-		if err := r.Update(ctx, repository); err != nil {
-			return ctrl.Result{}, err
-		}
 	}
 
 	// Get credentials from secret
@@ -150,23 +134,6 @@ func (r *ResticRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	r.Recorder.Event(repository, corev1.EventTypeNormal, "ReconcileSuccess", "Repository reconciled successfully")
 
 	return ctrl.Result{RequeueAfter: defaultRequeueInterval}, nil
-}
-
-func (r *ResticRepositoryReconciler) handleDeletion(ctx context.Context, repository *backupv1alpha1.ResticRepository) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-
-	if controllerutil.ContainsFinalizer(repository, resticRepositoryFinalizer) {
-		// Perform cleanup if needed
-		log.Info("Performing finalizer cleanup for ResticRepository")
-
-		// Remove the finalizer
-		controllerutil.RemoveFinalizer(repository, resticRepositoryFinalizer)
-		if err := r.Update(ctx, repository); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
 }
 
 func (r *ResticRepositoryReconciler) getCredentials(ctx context.Context, repository *backupv1alpha1.ResticRepository) (restic.Credentials, error) {
