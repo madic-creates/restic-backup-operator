@@ -47,7 +47,7 @@ jobs:
             type=sha
 
       - name: Upload CRD artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: crds
           path: config/crd/bases/*.yaml
@@ -90,7 +90,7 @@ jobs:
     needs: [prepare, docker-build]
     steps:
       - name: Download CRD artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: crds
           path: crds
