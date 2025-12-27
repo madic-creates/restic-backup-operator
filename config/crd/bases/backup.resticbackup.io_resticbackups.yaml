@@ -382,13 +382,19 @@ spec:
                       credentialsSecretRef:
                         description: |-
                           CredentialsSecretRef references a secret containing ntfy credentials.
-                          The secret should contain a key 'auth-header' with the Authorization header value.
+                          The secret can contain the following keys:
+                            - "token": Bearer token for authentication (preferred over username/password)
+                            - "username": Username for basic authentication
+                            - "password": Password for basic authentication
+                          If "token" is present, it will be used as Bearer token.
+                          Otherwise, "username" and "password" will be used for Basic authentication.
                         properties:
-                          key:
-                            description: Key within the secret to select.
-                            type: string
                           name:
-                            description: Name of the secret in the same namespace.
+                            description: Name of the secret.
+                            type: string
+                          namespace:
+                            description: Namespace of the secret. If empty, uses the
+                              same namespace as the referencing resource.
                             type: string
                         required:
                         - name

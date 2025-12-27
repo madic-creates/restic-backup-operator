@@ -59,9 +59,11 @@ spec:
       enabled: true
       serverURL: https://ntfy.example.com
       topic: backups
+      # Reference to secret with ntfy credentials
+      # Secret can contain: token (Bearer), or username+password (Basic auth)
       credentialsSecretRef:
         name: ntfy-credentials
-        key: auth-header
+        namespace: backup-system  # optional, defaults to same namespace
       onlyOnFailure: true
       priority: 4
 

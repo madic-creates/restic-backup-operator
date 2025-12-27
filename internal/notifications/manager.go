@@ -68,7 +68,9 @@ type PushgatewayConfig struct {
 type NtfyConfig struct {
 	ServerURL     string
 	Topic         string
-	AuthHeader    string
+	Token         string // Bearer token (preferred over username/password)
+	Username      string // Username for basic auth
+	Password      string // Password for basic auth
 	OnlyOnFailure bool
 	Priority      int32
 	Tags          []string

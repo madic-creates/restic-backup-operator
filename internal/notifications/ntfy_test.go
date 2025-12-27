@@ -140,11 +140,32 @@ func TestNtfyNotifier_Notify(t *testing.T) {
 			expectError:    false,
 		},
 		{
-			name: "with auth header",
+			name: "with bearer token",
 			config: NtfyConfig{
-				ServerURL:  "",
-				Topic:      "test-topic",
-				AuthHeader: "Bearer test-token",
+				ServerURL: "",
+				Topic:     "test-topic",
+				Token:     "test-token",
+			},
+			event: Event{
+				Type:      EventTypeSuccess,
+				Resource:  "test-backup",
+				Namespace: "default",
+				Message:   "Backup completed",
+				Timestamp: time.Now(),
+			},
+			serverStatus:   http.StatusOK,
+			expectedTitle:  "default/test-backup - Backup Succeeded",
+			expectedTags:   []string{"white_check_mark"},
+			expectPriority: 3,
+			expectError:    false,
+		},
+		{
+			name: "with basic auth",
+			config: NtfyConfig{
+				ServerURL: "",
+				Topic:     "test-topic",
+				Username:  "testuser",
+				Password:  "testpass",
 			},
 			event: Event{
 				Type:      EventTypeSuccess,
@@ -263,8 +284,16 @@ func TestNtfyNotifier_Notify(t *testing.T) {
 				}
 			}
 
-			if tt.config.AuthHeader != "" && receivedAuthHeader != tt.config.AuthHeader {
-				t.Errorf("expected auth header %s, got %s", tt.config.AuthHeader, receivedAuthHeader)
+			// Verify authentication header
+			if tt.config.Token != "" {
+				expectedAuth := "Bearer " + tt.config.Token
+				if receivedAuthHeader != expectedAuth {
+					t.Errorf("expected auth header %s, got %s", expectedAuth, receivedAuthHeader)
+				}
+			} else if tt.config.Username != "" && tt.config.Password != "" {
+				if receivedAuthHeader == "" || receivedAuthHeader[:6] != "Basic " {
+					t.Errorf("expected Basic auth header, got %s", receivedAuthHeader)
+				}
 			}
 		})
 	}

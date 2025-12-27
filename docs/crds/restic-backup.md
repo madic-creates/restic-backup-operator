@@ -165,11 +165,11 @@ spec:
       enabled: true
       serverURL: https://ntfy.example.com
       topic: backups
-      # Reference to secret with ntfy credentials
+      # Reference to secret with ntfy credentials (see Ntfy Credentials section below)
       credentialsSecretRef:
         name: ntfy-credentials
-        key: auth-header
-      # Only notify on failure (default: true)
+        namespace: backup-system  # optional, defaults to same namespace
+      # Only notify on failure (default: false)
       onlyOnFailure: true
       priority: 4
       tags:
@@ -349,3 +349,60 @@ Configure snapshot retention using restic forget parameters:
 | `keepYearly` | Keep N yearly snapshots |
 | `prune` | Run prune after forget |
 | `groupBy` | Group snapshots by host/tags |
+
+## Ntfy Credentials
+
+The `spec.notifications.ntfy.credentialsSecretRef` references a Kubernetes Secret containing ntfy authentication credentials. The secret can be in the same namespace as the ResticBackup or in a different namespace (specify `namespace` field).
+
+### Secret Format
+
+The secret can contain the following keys:
+
+| Key | Description | Priority |
+|-----|-------------|----------|
+| `token` | Bearer token for authentication | Preferred (used if present) |
+| `username` | Username for basic authentication | Used with `password` if no `token` |
+| `password` | Password for basic authentication | Used with `username` if no `token` |
+
+If `token` is present, it will be used as a Bearer token. Otherwise, `username` and `password` will be used for Basic authentication.
+
+### Example: Bearer Token Authentication
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ntfy-credentials
+  namespace: backup-system
+type: Opaque
+stringData:
+  token: "tk_your_ntfy_access_token"
+```
+
+### Example: Basic Authentication
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ntfy-credentials
+  namespace: backup-system
+type: Opaque
+stringData:
+  username: "your-username"
+  password: "your-password"
+```
+
+### Usage in ResticBackup
+
+```yaml
+spec:
+  notifications:
+    ntfy:
+      enabled: true
+      serverURL: https://ntfy.example.com
+      topic: backups
+      credentialsSecretRef:
+        name: ntfy-credentials
+        namespace: backup-system  # optional
+```

@@ -19,6 +19,7 @@ package notifications
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -131,8 +132,12 @@ func (n *NtfyNotifier) Notify(ctx context.Context, config NtfyConfig, event Even
 	req.Header.Set("Content-Type", "application/json")
 
 	// Add authorization if provided
-	if config.AuthHeader != "" {
-		req.Header.Set("Authorization", config.AuthHeader)
+	// Token (Bearer) takes precedence over username/password (Basic)
+	if config.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+config.Token)
+	} else if config.Username != "" && config.Password != "" {
+		auth := base64.StdEncoding.EncodeToString([]byte(config.Username + ":" + config.Password))
+		req.Header.Set("Authorization", "Basic "+auth)
 	}
 
 	// Send request

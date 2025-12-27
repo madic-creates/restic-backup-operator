@@ -545,7 +545,9 @@ func TestConfig_Fields(t *testing.T) {
 		Ntfy: &NtfyConfig{
 			ServerURL:     "https://ntfy.sh",
 			Topic:         "backups",
-			AuthHeader:    "Bearer token",
+			Token:         "mytoken",
+			Username:      "user",
+			Password:      "pass",
 			OnlyOnFailure: true,
 			Priority:      5,
 			Tags:          []string{"backup", "alert"},
@@ -568,8 +570,8 @@ func TestConfig_Fields(t *testing.T) {
 		t.Errorf("expected ntfy topic 'backups', got %s", config.Ntfy.Topic)
 	}
 
-	if config.Ntfy.AuthHeader != "Bearer token" {
-		t.Errorf("expected auth header 'Bearer token', got %s", config.Ntfy.AuthHeader)
+	if config.Ntfy.Token != "mytoken" {
+		t.Errorf("expected token 'mytoken', got %s", config.Ntfy.Token)
 	}
 
 	if !config.Ntfy.OnlyOnFailure {

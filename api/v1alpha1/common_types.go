@@ -112,6 +112,24 @@ type PushgatewayConfig struct {
 	JobName string `json:"jobName,omitempty"`
 }
 
+// NtfyCredentialsSecretRef references a secret containing ntfy credentials.
+// The secret can contain the following keys:
+//   - "token": Bearer token for authentication (preferred over username/password)
+//   - "username": Username for basic authentication
+//   - "password": Password for basic authentication
+//
+// If "token" is present, it will be used as Bearer token.
+// Otherwise, "username" and "password" will be used for Basic authentication.
+type NtfyCredentialsSecretRef struct {
+	// Name of the secret.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Namespace of the secret. If empty, uses the same namespace as the referencing resource.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // NtfyConfig configures ntfy push notifications.
 type NtfyConfig struct {
 	// Enabled enables ntfy notifications.
@@ -127,9 +145,14 @@ type NtfyConfig struct {
 	Topic string `json:"topic"`
 
 	// CredentialsSecretRef references a secret containing ntfy credentials.
-	// The secret should contain a key 'auth-header' with the Authorization header value.
+	// The secret can contain the following keys:
+	//   - "token": Bearer token for authentication (preferred over username/password)
+	//   - "username": Username for basic authentication
+	//   - "password": Password for basic authentication
+	// If "token" is present, it will be used as Bearer token.
+	// Otherwise, "username" and "password" will be used for Basic authentication.
 	// +optional
-	CredentialsSecretRef *SecretKeySelector `json:"credentialsSecretRef,omitempty"`
+	CredentialsSecretRef *NtfyCredentialsSecretRef `json:"credentialsSecretRef,omitempty"`
 
 	// OnlyOnFailure sends notifications only on failure.
 	// +optional
