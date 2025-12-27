@@ -125,3 +125,6 @@ This file should be automatically updated with important changes:
 - Changed architecture decisions
 - New commands or tool versions
 - Important conventions or patterns
+
+## Local overrides
+If `CLAUDE.local.md` exists, also take its contents into account.
