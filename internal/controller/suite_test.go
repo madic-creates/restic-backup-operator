@@ -42,6 +42,10 @@ func (m *MockExecutor) Init(_ context.Context, _ restic.Credentials) error {
 	return nil
 }
 
+func (m *MockExecutor) Unlock(_ context.Context, _ restic.Credentials) error {
+	return nil
+}
+
 func (m *MockExecutor) Check(_ context.Context, _ restic.Credentials) (*restic.CheckResult, error) {
 	return &restic.CheckResult{Success: true}, nil
 }

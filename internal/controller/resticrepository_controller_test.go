@@ -201,6 +201,34 @@ var _ = Describe("ResticRepository Controller", func() {
 			Expect(formatBytes(1099511627776)).To(Equal("1.0 TiB"))
 		})
 	})
+
+	Context("parseLockAge helper function", func() {
+		It("should parse lock age from restic error message", func() {
+			// Test with hours, minutes, and seconds
+			errMsg := `repository is already locked exclusively by PID 14 on restic-backup-operator-75dbb6fb55-74hnd
+lock was created at 2025-12-26 21:32:34 (12h36m32.091009819s ago)`
+			Expect(parseLockAge(errMsg)).To(BeNumerically("~", 12*time.Hour+36*time.Minute+32*time.Second, time.Second))
+		})
+
+		It("should parse lock age with only minutes and seconds", func() {
+			errMsg := "lock was created at 2025-12-26 21:32:34 (5m30.5s ago)"
+			Expect(parseLockAge(errMsg)).To(BeNumerically("~", 5*time.Minute+30*time.Second, time.Second))
+		})
+
+		It("should parse lock age with only seconds", func() {
+			errMsg := "lock was created at 2025-12-26 21:32:34 (45.123s ago)"
+			Expect(parseLockAge(errMsg)).To(BeNumerically("~", 45*time.Second, time.Second))
+		})
+
+		It("should return 0 for message without lock age", func() {
+			errMsg := "some other error message"
+			Expect(parseLockAge(errMsg)).To(Equal(time.Duration(0)))
+		})
+
+		It("should return 0 for empty message", func() {
+			Expect(parseLockAge("")).To(Equal(time.Duration(0)))
+		})
+	})
 })
 
 // randString generates a random string of lowercase letters

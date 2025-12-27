@@ -33,6 +33,9 @@ type Executor interface {
 	// Init initializes a new repository.
 	Init(ctx context.Context, creds Credentials) error
 
+	// Unlock removes stale locks from the repository.
+	Unlock(ctx context.Context, creds Credentials) error
+
 	// Check verifies the repository integrity.
 	Check(ctx context.Context, creds Credentials) (*CheckResult, error)
 
@@ -120,14 +123,26 @@ func (e *DefaultExecutor) run(ctx context.Context, creds Credentials, args []str
 // Init initializes a new repository.
 func (e *DefaultExecutor) Init(ctx context.Context, creds Credentials) error {
 	args := NewCommand("init").Build()
-	_, _, err := e.run(ctx, creds, args)
+	_, stderr, err := e.run(ctx, creds, args)
 	if err != nil {
-		// Check if repository already exists
-		if strings.Contains(err.Error(), "already exists") ||
-			strings.Contains(err.Error(), "repository master key and target file already initialized") {
+		stderrStr := string(stderr)
+		// Check if repository already exists (check both error and stderr)
+		if strings.Contains(stderrStr, "already exists") ||
+			strings.Contains(stderrStr, "repository master key and config already initialized") ||
+			strings.Contains(stderrStr, "config file already exists") {
 			return nil
 		}
 		return fmt.Errorf("failed to initialize repository: %w", err)
+	}
+	return nil
+}
+
+// Unlock removes stale locks from the repository.
+func (e *DefaultExecutor) Unlock(ctx context.Context, creds Credentials) error {
+	args := NewCommand("unlock").Build()
+	_, _, err := e.run(ctx, creds, args)
+	if err != nil {
+		return fmt.Errorf("failed to unlock repository: %w", err)
 	}
 	return nil
 }
@@ -138,14 +153,16 @@ func (e *DefaultExecutor) Check(ctx context.Context, creds Credentials) (*CheckR
 	args := NewCommand("check").Build()
 	_, stderr, err := e.run(ctx, creds, args)
 
+	stderrStr := string(stderr)
 	result := &CheckResult{
 		Success:  err == nil,
-		Message:  string(stderr),
+		Message:  stderrStr,
 		Duration: time.Since(start),
 	}
 
 	if err != nil {
-		return result, fmt.Errorf("repository check failed: %w", err)
+		// Include stderr in error message for better diagnostics
+		return result, fmt.Errorf("repository check failed: %w: %s", err, stderrStr)
 	}
 
 	return result, nil

@@ -19,6 +19,8 @@ package controller
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,7 +41,12 @@ import (
 const (
 	defaultRequeueInterval = 1 * time.Hour
 	errorRequeueInterval   = 30 * time.Second
+	// DefaultStaleLockThreshold defines the default duration after which a lock is considered stale
+	DefaultStaleLockThreshold = 30 * time.Minute
 )
+
+// lockAgeRegex matches the lock age in restic error messages like "(12h36m32.091009819s ago)"
+var lockAgeRegex = regexp.MustCompile(`\((\d+h)?(\d+m)?[\d.]+s ago\)`)
 
 // ResticRepositoryReconciler reconciles a ResticRepository object
 type ResticRepositoryReconciler struct {
@@ -48,6 +55,9 @@ type ResticRepositoryReconciler struct {
 	Recorder record.EventRecorder
 	// Executor is optional - if nil, a default executor will be created
 	Executor restic.Executor
+	// StaleLockThreshold defines how old a lock must be to be considered stale.
+	// If not set, DefaultStaleLockThreshold is used.
+	StaleLockThreshold time.Duration
 }
 
 // +kubebuilder:rbac:groups=backup.resticbackup.io,resources=resticrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -92,19 +102,59 @@ func (r *ResticRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// Check if repository exists and is accessible
 	checkResult, err := executor.Check(ctx, creds)
 	if err != nil {
-		// Repository might not exist, try to initialize it
-		log.Info("Repository check failed, attempting initialization")
-		if initErr := executor.Init(ctx, creds); initErr != nil {
-			log.Error(initErr, "Failed to initialize repository")
-			r.setCondition(repository, conditions.NotReadyCondition("InitializationFailed", initErr.Error()))
-			r.Recorder.Event(repository, corev1.EventTypeWarning, "InitializationFailed", initErr.Error())
-			if updateErr := r.Status().Update(ctx, repository); updateErr != nil {
-				return ctrl.Result{}, updateErr
+		errStr := err.Error()
+
+		// Check if repository is locked
+		if strings.Contains(errStr, "repository is already locked") {
+			// Only remove locks that are stale (older than threshold)
+			lockAge := parseLockAge(errStr)
+			threshold := r.getStaleLockThreshold()
+			if lockAge >= threshold {
+				log.Info("Repository has stale lock, attempting to remove", "lockAge", lockAge, "threshold", threshold)
+				if unlockErr := executor.Unlock(ctx, creds); unlockErr != nil {
+					log.Error(unlockErr, "Failed to unlock repository")
+					r.setCondition(repository, conditions.NotReadyCondition("UnlockFailed", unlockErr.Error()))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "UnlockFailed", unlockErr.Error())
+					if updateErr := r.Status().Update(ctx, repository); updateErr != nil {
+						return ctrl.Result{}, updateErr
+					}
+					return ctrl.Result{RequeueAfter: errorRequeueInterval}, nil
+				}
+				r.Recorder.Event(repository, corev1.EventTypeNormal, "RepositoryUnlocked", fmt.Sprintf("Stale lock (age: %s) was removed from repository", lockAge))
+				log.Info("Repository unlocked successfully, retrying check")
+
+				// Retry check after unlock
+				checkResult, err = executor.Check(ctx, creds)
+				if err == nil && checkResult != nil && checkResult.Success {
+					log.Info("Repository check passed after unlock")
+				}
+			} else {
+				// Lock is fresh - another operation might be in progress
+				log.Info("Repository is locked by active operation, will retry later", "lockAge", lockAge, "threshold", threshold)
+				r.setCondition(repository, conditions.NotReadyCondition("RepositoryLocked", fmt.Sprintf("Repository is locked by another operation (lock age: %s, threshold: %s)", lockAge, threshold)))
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "RepositoryLocked", fmt.Sprintf("Repository is locked by another operation, lock age: %s (threshold: %s)", lockAge, threshold))
+				if updateErr := r.Status().Update(ctx, repository); updateErr != nil {
+					return ctrl.Result{}, updateErr
+				}
+				return ctrl.Result{RequeueAfter: errorRequeueInterval}, nil
 			}
-			return ctrl.Result{RequeueAfter: errorRequeueInterval}, nil
 		}
-		r.Recorder.Event(repository, corev1.EventTypeNormal, "RepositoryInitialized", "Repository was successfully initialized")
-		log.Info("Repository initialized successfully")
+
+		// If still failing (not a lock issue, or lock removal didn't help), try to initialize
+		if err != nil {
+			log.Info("Repository check failed, attempting initialization", "error", err.Error())
+			if initErr := executor.Init(ctx, creds); initErr != nil {
+				log.Error(initErr, "Failed to initialize repository")
+				r.setCondition(repository, conditions.NotReadyCondition("InitializationFailed", initErr.Error()))
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "InitializationFailed", initErr.Error())
+				if updateErr := r.Status().Update(ctx, repository); updateErr != nil {
+					return ctrl.Result{}, updateErr
+				}
+				return ctrl.Result{RequeueAfter: errorRequeueInterval}, nil
+			}
+			r.Recorder.Event(repository, corev1.EventTypeNormal, "RepositoryInitialized", "Repository was successfully initialized")
+			log.Info("Repository initialized successfully")
+		}
 	} else if checkResult != nil && checkResult.Success {
 		log.Info("Repository check passed")
 	}
@@ -172,6 +222,14 @@ func (r *ResticRepositoryReconciler) setCondition(repository *backupv1alpha1.Res
 	conditions.SetCondition(&repository.Status.Conditions, condition)
 }
 
+// getStaleLockThreshold returns the configured stale lock threshold or the default.
+func (r *ResticRepositoryReconciler) getStaleLockThreshold() time.Duration {
+	if r.StaleLockThreshold > 0 {
+		return r.StaleLockThreshold
+	}
+	return DefaultStaleLockThreshold
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ResticRepositoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -191,4 +249,24 @@ func formatBytes(bytes uint64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %ciB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// parseLockAge extracts the lock age from a restic error message.
+// Example: "lock was created at 2025-12-26 21:32:34 (12h36m32.091009819s ago)"
+// Returns 0 if the age cannot be parsed.
+func parseLockAge(errMsg string) time.Duration {
+	match := lockAgeRegex.FindString(errMsg)
+	if match == "" {
+		return 0
+	}
+
+	// Remove parentheses and " ago" suffix: "(12h36m32.091009819s ago)" -> "12h36m32.091009819s"
+	durationStr := strings.TrimSuffix(strings.TrimPrefix(match, "("), " ago)")
+
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return 0
+	}
+
+	return duration
 }
