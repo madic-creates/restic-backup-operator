@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"os"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -52,6 +53,15 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var staleLockThreshold time.Duration
+
+	// Default stale lock threshold, can be overridden by env var
+	defaultStaleLockThreshold := 30 * time.Minute
+	if envVal := os.Getenv("STALE_LOCK_THRESHOLD"); envVal != "" {
+		if parsed, err := time.ParseDuration(envVal); err == nil {
+			defaultStaleLockThreshold = parsed
+		}
+	}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
@@ -63,6 +73,9 @@ func main() {
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	flag.DurationVar(&staleLockThreshold, "stale-lock-threshold", defaultStaleLockThreshold,
+		"Duration after which a repository lock is considered stale and can be removed automatically. "+
+			"Can also be set via STALE_LOCK_THRESHOLD environment variable. Example: 30m, 1h, 2h30m")
 
 	opts := zap.Options{
 		Development: true,
@@ -103,10 +116,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	setupLog.Info("using stale lock threshold", "threshold", staleLockThreshold)
+
 	if err = (&controller.ResticRepositoryReconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("resticrepository-controller"),
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		Recorder:           mgr.GetEventRecorderFor("resticrepository-controller"),
+		StaleLockThreshold: staleLockThreshold,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ResticRepository")
 		os.Exit(1)

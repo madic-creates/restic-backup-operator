@@ -43,6 +43,9 @@ spec:
             - --leader-elect
             {{- end }}
             - --health-probe-bind-address=:8081
+          env:
+            - name: STALE_LOCK_THRESHOLD
+              value: {{ .Values.staleLockThreshold | quote }}
           ports:
             - name: health
               containerPort: 8081

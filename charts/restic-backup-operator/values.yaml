@@ -91,6 +91,12 @@ leaderElection:
   enabled: true
   resourceName: "restic-backup-operator-leader"
 
+# Repository lock handling
+# Duration after which a repository lock is considered stale and can be removed automatically.
+# This prevents the operator from removing locks from active backup operations.
+# Format: Go duration string (e.g., "30m", "1h", "2h30m")
+staleLockThreshold: "30m"
+
 # Logging configuration
 logging:
   level: info

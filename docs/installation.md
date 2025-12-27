@@ -51,20 +51,18 @@ serviceAccount:
   create: true
   name: restic-backup-operator
 
-# Default restic image for backup jobs
-restic:
-  image: restic/restic:0.17.3
+# Leader election for HA
+leaderElection:
+  enabled: true
 
-# Operator configuration
-config:
-  # Watch all namespaces (empty list = all)
-  watchNamespaces: []
-  # Leader election for HA
-  leaderElection: true
-  # Metrics port
-  metricsPort: 8080
-  # Health probe port
-  healthPort: 8081
+# Stale lock threshold - duration after which repository locks are
+# considered stale and can be automatically removed.
+# This prevents the operator from interfering with active backup operations.
+# Format: Go duration string (e.g., "30m", "1h", "2h30m")
+staleLockThreshold: "30m"
+
+# Default restic image for backup jobs
+defaultResticImage: ghcr.io/restic/restic:0.18.1
 ```
 
 Install with custom values:
@@ -187,6 +185,62 @@ spec:
     keepDaily: 7
     keepWeekly: 4
     keepMonthly: 6
+```
+
+## Operator Configuration
+
+### Stale Lock Handling
+
+Restic uses locks to prevent concurrent access to repositories. If a backup operation is interrupted (e.g., pod crash, node failure), stale locks may remain and block subsequent operations.
+
+The operator automatically detects and removes stale locks based on a configurable threshold:
+
+| Configuration | Description |
+|---------------|-------------|
+| `staleLockThreshold` | Duration after which a lock is considered stale. Default: `30m` |
+
+**How it works:**
+
+1. When the operator detects a locked repository, it checks the lock age
+2. If the lock is **older** than the threshold, it's removed automatically
+3. If the lock is **newer** than the threshold, the operator waits and retries later
+
+This prevents the operator from interfering with active backup operations while still recovering from stale locks.
+
+**Configuration via Helm:**
+
+```yaml
+# values.yaml
+staleLockThreshold: "1h"  # Consider locks stale after 1 hour
+```
+
+**Configuration via environment variable:**
+
+```yaml
+env:
+  - name: STALE_LOCK_THRESHOLD
+    value: "1h"
+```
+
+**Configuration via command-line flag:**
+
+```bash
+/manager --stale-lock-threshold=1h
+```
+
+**Recommended values:**
+
+- `30m` (default) - Suitable for most workloads
+- `1h` - For larger backups that may take longer
+- `2h` - For very large repositories or slow network connections
+
+### Leader Election
+
+For high availability deployments, leader election ensures only one operator instance is active:
+
+```yaml
+leaderElection:
+  enabled: true
 ```
 
 ## Uninstallation
