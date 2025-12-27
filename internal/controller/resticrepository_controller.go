@@ -159,7 +159,18 @@ func (r *ResticRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		log.Info("Repository check passed")
 	}
 
-	// Get repository statistics
+	// Repository is accessible - set Ready condition immediately
+	// This ensures the repository is marked as ready even if stats retrieval is slow
+	r.setCondition(repository, conditions.ReadyCondition("RepositoryAccessible", "Repository is initialized and accessible"))
+	repository.Status.ObservedGeneration = repository.Generation
+
+	if err := r.Status().Update(ctx, repository); err != nil {
+		log.Error(err, "Failed to update status")
+		return ctrl.Result{}, err
+	}
+
+	// Get repository statistics (non-blocking for Ready status)
+	// Stats can be slow for large repositories, so we run it after marking Ready
 	stats, err := executor.Stats(ctx, creds, restic.StatsOptions{Mode: "restore-size"})
 	if err != nil {
 		log.Error(err, "Failed to get repository stats")
@@ -170,15 +181,11 @@ func (r *ResticRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			TotalFileCount: int64(stats.TotalFileCount),
 			SnapshotCount:  int32(stats.SnapshotCount),
 		}
-	}
-
-	// Update status
-	r.setCondition(repository, conditions.ReadyCondition("RepositoryAccessible", "Repository is initialized and accessible"))
-	repository.Status.ObservedGeneration = repository.Generation
-
-	if err := r.Status().Update(ctx, repository); err != nil {
-		log.Error(err, "Failed to update status")
-		return ctrl.Result{}, err
+		// Update status with statistics
+		if err := r.Status().Update(ctx, repository); err != nil {
+			log.Error(err, "Failed to update status with statistics")
+			return ctrl.Result{}, err
+		}
 	}
 
 	r.Recorder.Event(repository, corev1.EventTypeNormal, "ReconcileSuccess", "Repository reconciled successfully")
