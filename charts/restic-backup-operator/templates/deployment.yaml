@@ -56,6 +56,16 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          # Restic requires a writable /tmp directory for temporary files and cache
+          # during repository operations (check, stats, backup, restore).
+          # Without this, operations fail with "read-only file system" errors
+          # when readOnlyRootFilesystem is enabled.
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
